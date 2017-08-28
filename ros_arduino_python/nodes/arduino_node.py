@@ -114,22 +114,28 @@ class ArduinoROS():
             except:
                 params['direction'] = 'input'
 
+            # Set the frame to the base frame if not specified.
+            try:
+                params['frame']
+            except:
+                params['frame'] = self.base_frame
+                
             if params['type'] == "Ping":
-                sensor = Ping(self.controller, name, params['pin'], params['rate'], self.base_frame)
+                sensor = Ping(self.controller, name, params['pin'], params['rate'], params['frame'])
             elif params['type'] == "GP2D12":
-                sensor = GP2D12(self.controller, name, params['pin'], params['rate'], self.base_frame)
+                sensor = GP2D12(self.controller, name, params['pin'], params['rate'], params['frame'])
             elif params['type'] == "GP2Y0A60":
-                sensor = GP2Y0A60(self.controller, name, params['pin'], params['rate'], self.base_frame)
+                sensor = GP2Y0A60(self.controller, name, params['pin'], params['rate'], params['frame'])
             elif params['type'] == 'Digital':
-                sensor = DigitalSensor(self.controller, name, params['pin'], params['rate'], self.base_frame, direction=params['direction'])
+                sensor = DigitalSensor(self.controller, name, params['pin'], params['rate'], params['frame'], direction=params['direction'])
             elif params['type'] == 'Analog':
-                sensor = AnalogSensor(self.controller, name, params['pin'], params['rate'], self.base_frame, direction=params['direction'])
+                sensor = AnalogSensor(self.controller, name, params['pin'], params['rate'], params['frame'], direction=params['direction'])
             elif params['type'] == 'PololuMotorCurrent':
-                sensor = PololuMotorCurrent(self.controller, name, params['pin'], params['rate'], self.base_frame)
+                sensor = PololuMotorCurrent(self.controller, name, params['pin'], params['rate'], params['frame'])
             elif params['type'] == 'PhidgetsVoltage':
-                sensor = PhidgetsVoltage(self.controller, name, params['pin'], params['rate'], self.base_frame)
+                sensor = PhidgetsVoltage(self.controller, name, params['pin'], params['rate'], params['frame'])
             elif params['type'] == 'PhidgetsCurrent':
-                sensor = PhidgetsCurrent(self.controller, name, params['pin'], params['rate'], self.base_frame)
+                sensor = PhidgetsCurrent(self.controller, name, params['pin'], params['rate'], params['frame'])
 
 #                if params['type'] == "MaxEZ1":
 #                    self.sensors[len(self.sensors)]['trigger_pin'] = params['trigger_pin']

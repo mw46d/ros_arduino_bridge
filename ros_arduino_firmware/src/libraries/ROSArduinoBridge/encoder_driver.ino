@@ -96,12 +96,16 @@
   }
 #elif defined POLOLU_ASTAR_ROBOT_CONTROLLER
   #include <AStar32U4.h>
+  #ifdef USE_ENABLE_INTERRUPT
+    #include <EnableInterrupt.h>
+  #endif
 
   volatile long left_enc_pos = 0L;
   volatile long right_enc_pos = 0L;
 
   static const int8_t ENC_STATES [] = {0,1,-1,0,-1,0,0,1,1,0,0,-1,0,-1,1,0};  //encoder lookup table
 
+#ifndef USE_ENABLE_INTERRUPT
   static void pciSetup(byte pin) {
     *digitalPinToPCMSK(pin) |= bit (digitalPinToPCMSKbit(pin));  // enable pin
     PCIFR |= 1; // clear any outstanding interrupt
@@ -132,14 +136,51 @@
     right_enc_pos += ENC_STATES[(enc_last & 0x0f)];
   }
 
-  void initEncoder() {
-    FastGPIO::Pin<LEFT_ENC_PIN_XOR>::setInputPulledUp();
-    FastGPIO::Pin<LEFT_ENC_PIN_B>::setInputPulledUp();
-    FastGPIO::Pin<RIGHT_ENC_PIN_XOR>::setInputPulledUp();
-    FastGPIO::Pin<RIGHT_ENC_PIN_B>::setInputPulledUp();
+#else //USE_ENABLE_INTERRUPT
 
-    pciSetup(LEFT_ENC_PIN_XOR);
-    attachInterrupt(digitalPinToInterrupt(RIGHT_ENC_PIN_XOR), rightISR, CHANGE);
+  // Update the encoder when the left A pin changes. We increment or
+  // decrement by 2 since only the A channel is connected to an
+  // interrupt. (This leaves PID constants unchanged if both A and B
+  // interrupts are used.)
+  void leftISR() {
+    left_enc_pos +=
+      (FastGPIO::Pin<LEFT_ENC_PIN_A>::isInputHigh()
+       == FastGPIO::Pin<LEFT_ENC_PIN_B>::isInputHigh())
+        ? 2
+        : -2;
+  }
+  
+  // Update the encoder when the right A pin changes. We increment or
+  // decrement by 2 since only the A channel is connected to an
+  // interrupt. (This leaves PID constants unchanged if both A and B
+  // interrupts are used.)
+  void rightISR() {
+    right_enc_pos +=
+      (FastGPIO::Pin<RIGHT_ENC_PIN_A>::isInputHigh()
+       == FastGPIO::Pin<RIGHT_ENC_PIN_B>::isInputHigh())
+        ? 2
+        : -2;
+  }
+#endif //USE_ENABLE_INTERRUPT
+  
+  void initEncoder() {
+    #ifndef USE_ENABLE_INTERRUPT
+      FastGPIO::Pin<LEFT_ENC_PIN_XOR>::setInputPulledUp();
+      FastGPIO::Pin<LEFT_ENC_PIN_B>::setInputPulledUp();
+      FastGPIO::Pin<RIGHT_ENC_PIN_XOR>::setInputPulledUp();
+      FastGPIO::Pin<RIGHT_ENC_PIN_B>::setInputPulledUp();
+      pciSetup(LEFT_ENC_PIN_XOR);
+      attachInterrupt(digitalPinToInterrupt(RIGHT_ENC_PIN_XOR), rightISR, CHANGE);
+    #else
+      FastGPIO::Pin<LEFT_ENC_PIN_A>::setInputPulledUp();
+      FastGPIO::Pin<LEFT_ENC_PIN_B>::setInputPulledUp();
+      FastGPIO::Pin<RIGHT_ENC_PIN_A>::setInputPulledUp();
+      FastGPIO::Pin<RIGHT_ENC_PIN_B>::setInputPulledUp();
+      // Only enable interrupts on the A encoder pins, to reduce the
+      // rate of interrupts.
+      enableInterrupt(LEFT_ENC_PIN_A, leftISR, CHANGE);
+      enableInterrupt(RIGHT_ENC_PIN_A, rightISR, CHANGE);
+    #endif //USE_ENABLE_INTERRUPT
   }
 
   /* Wrap the encoder reading function */

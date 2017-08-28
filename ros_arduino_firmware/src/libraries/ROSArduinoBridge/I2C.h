@@ -177,7 +177,7 @@ static void i2c_receive_event(int bytes_received) {
 
     if (len < 3) {
       // Too short
-      Serial.println("i2c_receive_event too short");
+      DEBUG_SERIAL_STREAM.println("i2c_receive_event too short");
       return;
     }
 
@@ -187,7 +187,10 @@ static void i2c_receive_event(int bytes_received) {
     unsigned int chk_r = buff[3 + len + 1] << 8 | buff[3 + len];
     if (chk != chk_r) {
       // Checksum error
-      Serial.print("i2c_receive_event checksum error "); Serial.print(chk); Serial.print(" != "); Serial.println(chk_r);
+      DEBUG_SERIAL_STREAM.print("i2c_receive_event checksum error ");
+      DEBUG_SERIAL_STREAM.print(chk);
+      DEBUG_SERIAL_STREAM.print(" != ");
+      DEBUG_SERIAL_STREAM.println(chk_r);
       return;
     }
 
@@ -222,7 +225,7 @@ static AnalogScanner scanner;
 static void i2c_get_analog_values() {
   if (millis() > next_analog_read_time) {
     for (int i = 0; i < ANALOG_NUM; i++) {
-      unsigned int v = scanner.getValue(i);
+      unsigned int v = analogRead(i);
       unsigned char addr = 0x58 + i * 2;
 
       i2c_buffer[addr    ] =  v        & 0xff;
@@ -273,7 +276,7 @@ void runI2c() {
   i2c_buffer[0x40] = 0;
 
   // if (cmd > 0) {
-  //   Serial.print("i2c_handle_command("); Serial.print(cmd);
+  //   DEBUG_SERIAL_STREAM.print("i2c_handle_command("); DEBUG_SERIAL_STREAM.print(cmd);
   // }
 
   switch(cmd) {
@@ -299,20 +302,26 @@ void runI2c() {
     }
     leftPID.TargetTicksPerFrame = (double)((int)i2c_buffer[0x4d] << 8 | ((int)i2c_buffer[0x4c] & 0xff));
     rightPID.TargetTicksPerFrame = (double)((int)i2c_buffer[0x4f] << 8 | ((int)i2c_buffer[0x4e] & 0xff));
-    Serial.print(") leftTpF= "); Serial.print(leftPID.TargetTicksPerFrame);
-    Serial.print("  rightTpF= "); Serial.print(rightPID.TargetTicksPerFrame);
+    DEBUG_SERIAL_STREAM.print(") leftTpF= "); DEBUG_SERIAL_STREAM.print(leftPID.TargetTicksPerFrame);
+    DEBUG_SERIAL_STREAM.print("  rightTpF= "); DEBUG_SERIAL_STREAM.print(rightPID.TargetTicksPerFrame);
     break;
   case UPDATE_PID:
     Kp = (int)i2c_buffer[0x51] << 8 | ((int)i2c_buffer[0x50] & 0xff);
     Ki = (int)i2c_buffer[0x53] << 8 | ((int)i2c_buffer[0x52] & 0xff);
     Kd = (int)i2c_buffer[0x55] << 8 | ((int)i2c_buffer[0x54] & 0xff);
     Ko = (int)i2c_buffer[0x57] << 8 | ((int)i2c_buffer[0x56] & 0xff);
-    Serial.print(")  Kp= "); Serial.print(Kp); Serial.print("  Kd= "); Serial.print(Kd);
-    Serial.print("  Ki= "); Serial.print(Ki); Serial.print("  Ko= "); Serial.print(Ko);
+    DEBUG_SERIAL_STREAM.print(")  Kp= ");
+    DEBUG_SERIAL_STREAM.print(Kp);
+    DEBUG_SERIAL_STREAM.print("  Kd= ");
+    DEBUG_SERIAL_STREAM.print(Kd);
+    DEBUG_SERIAL_STREAM.print("  Ki= ");
+    DEBUG_SERIAL_STREAM.print(Ki);
+    DEBUG_SERIAL_STREAM.print("  Ko= ");
+    DEBUG_SERIAL_STREAM.println(Ko);
     break;
   }
   // if (cmd > 0) {
-  //   Serial.println(" ");
+  //   DEBUG_SERIAL_STREAM.println(" ");
   // }
 
   /*

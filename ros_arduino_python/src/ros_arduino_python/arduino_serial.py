@@ -31,17 +31,19 @@ from serial import Serial
 from arduino_driver import Arduino
 
 class ArduinoSerial(Arduino):
-    def __init__(self, port="/dev/ttyUSB0", baudrate=57600, timeout=0.5):
+    def __init__(self, port="/dev/ttyUSB0", baudrate=57600, timeout=0.5, write_timeout=None):
         self.port = port
         self.baudrate = baudrate
         self.timeout = timeout
+        self.write_timeout = write_timeout
+        self.interCharTimeout = timeout / 30.
         self.base_init()
 
 
     def connect(self):
         try:
             print "Connecting to Arduino on port", self.port, "..."
-            self.port = Serial(port=self.port, baudrate=self.baudrate, timeout=self.timeout, writeTimeout=self.writeTimeout)
+            self.port = Serial(port=self.port, baudrate=self.baudrate, timeout=self.timeout, write_timeout=self.write_timeout)
             # The next line is necessary to give the firmware time to wake up.
             time.sleep(1)
             test = self.get_baud()
@@ -149,7 +151,6 @@ class ArduinoSerial(Arduino):
                     print "Exception executing command: " + cmd
                 attempts += 1
         except:
-            self.mutex.release()
             print "Exception executing command: " + cmd
             value = None
 
@@ -237,7 +238,7 @@ class ArduinoSerial(Arduino):
     def get_baud(self):
         ''' Get the current baud rate on the serial port.
         '''
-        return int(self.execute('b'));
+        return self.execute('b');
 
     def get_encoder_counts(self):
         values = self.execute_array('e')
