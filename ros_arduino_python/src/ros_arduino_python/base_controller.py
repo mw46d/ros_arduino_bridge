@@ -83,7 +83,7 @@ class BaseController:
         self.last_cmd_vel = now
 
         # Subscriptions
-        rospy.Subscriber("cmd_vel", Twist, self.cmdVelCallback)
+        rospy.Subscriber("~cmd_vel", Twist, self.cmdVelCallback)
         
         # Clear any old odometry info
         self.arduino.reset_encoders()
@@ -145,46 +145,39 @@ class BaseController:
             self.enc_right = right_enc
             self.enc_left = left_enc
             
-            dxy_ave = (dright + dleft) / 2.0
+            dx = (dright + dleft) / 2.0
             dth = (dright - dleft) / self.wheel_track
-            vxy = dxy_ave / dt
-            vth = dth / dt
-                
-            if (dxy_ave != 0):
-                dx = cos(dth) * dxy_ave
-                dy = -sin(dth) * dxy_ave
-                self.x += (cos(self.th) * dx - sin(self.th) * dy)
-                self.y += (sin(self.th) * dx + cos(self.th) * dy)
-    
-            if (dth != 0):
-                self.th += dth 
-    
+
+            x = cos(dth) * dx
+            y = -sin(dth) * dx
+            self.x += (cos(self.th) * x - sin(self.th) * y)
+            self.y += (sin(self.th) * x + cos(self.th) * y)
+            self.th += dth
+
             quaternion = Quaternion()
             quaternion.x = 0.0 
             quaternion.y = 0.0
             quaternion.z = sin(self.th / 2.0)
             quaternion.w = cos(self.th / 2.0)
-    
-            # Create the odometry transform frame broadcaster.
-            self.odomBroadcaster.sendTransform(
-                (self.x, self.y, 0), 
-                (quaternion.x, quaternion.y, quaternion.z, quaternion.w),
-                rospy.Time.now(),
-                self.base_frame,
-                "odom"
-                )
-    
-            odom = Odometry()
-            odom.header.frame_id = "odom"
-            odom.child_frame_id = self.base_frame
+
+            odom = Odometry(header = rospy.Header(frame_id = "odom"), child_frame_id = self.base_frame)
             odom.header.stamp = now
             odom.pose.pose.position.x = self.x
             odom.pose.pose.position.y = self.y
             odom.pose.pose.position.z = 0
             odom.pose.pose.orientation = quaternion
-            odom.twist.twist.linear.x = vxy
+            odom.twist.twist.linear.x = dx/dt
             odom.twist.twist.linear.y = 0
-            odom.twist.twist.angular.z = vth
+            odom.twist.twist.angular.z = dth/dt
+
+            # Create the odometry transform frame broadcaster.
+            self.odomBroadcaster.sendTransform(
+                (self.x, self.y, 0), 
+                (quaternion.x, quaternion.y, quaternion.z, quaternion.w),
+                now,
+                self.base_frame,
+                "odom"
+                )
 
             self.odomPub.publish(odom)
             

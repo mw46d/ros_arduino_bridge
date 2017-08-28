@@ -194,6 +194,19 @@ class ArduinoSMBus(Arduino):
         self.mutex.acquire()
         retry = self.retry_count
         while retry > 0:
+            if right < 0:
+                right = - (abs(right) % 255)
+            else:
+                right = right % 255
+
+            if left < 0:
+                left = - (abs(left) % 255)
+            else:
+                left = left % 255
+
+            left = int(left)
+            right = int(right)
+
             r_value = ctypes.c_short(right).value
             l_value = ctypes.c_short(left).value
             # print "drive converted %d:%d" % (l_value, r_value)

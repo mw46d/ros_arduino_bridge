@@ -61,7 +61,7 @@ class ArduinoROS():
         self.cmd_vel = Twist()
 
         # A cmd_vel publisher so we can stop the robot when shutting down
-        self.cmd_vel_pub = rospy.Publisher('cmd_vel', Twist, queue_size=5)
+        self.cmd_vel_pub = rospy.Publisher('~cmd_vel', Twist, queue_size=5)
 
         # The SensorState publisher periodically publishes the values of all sensors on
         # a single topic.
