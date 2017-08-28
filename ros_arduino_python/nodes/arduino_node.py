@@ -119,7 +119,7 @@ class ArduinoROS():
                 params['frame']
             except:
                 params['frame'] = self.base_frame
-                
+
             if params['type'] == "Ping":
                 sensor = Ping(self.controller, name, params['pin'], params['rate'], params['frame'])
             elif params['type'] == "GP2D12":
