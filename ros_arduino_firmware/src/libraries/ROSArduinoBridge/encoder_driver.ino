@@ -115,8 +115,8 @@
    /* Interrupt routine for LEFT encoder, taking care of actual counting */
   ISR(PCINT0_vect) {
     static uint8_t enc_last = 0;
-    bool b = FastGPIO::Pin<LEFT_ENC_PIN_B>::isInputHigh();
-    bool a = FastGPIO::Pin<LEFT_ENC_PIN_XOR>::isInputHigh() ^ b;
+    bool a = FastGPIO::Pin<LEFT_ENC_PIN_B>::isInputHigh();
+    bool b = FastGPIO::Pin<LEFT_ENC_PIN_XOR>::isInputHigh() ^ a;
 
     enc_last <<= 2;
     enc_last |= ((uint8_t)a) << 1 | (uint8_t)b;

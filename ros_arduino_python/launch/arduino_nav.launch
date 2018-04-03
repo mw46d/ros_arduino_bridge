@@ -2,7 +2,7 @@
     <arg name="joy_config" default="mw" />
     <arg name="joy_dev" default="/dev/input/js0" />
     <arg name="config_filepath" default="$(find teleop_twist_joy)/config/$(arg joy_config).config.yaml" />
-    <arg name="urdf_file" default="$(find xacro)/xacro.py '$(find rospi2_description)/urdf/rospi2_base_only.xacro'" />
+    <arg name="urdf_file" default="$(find xacro)/xacro '$(find rospi2_description)/urdf/rospi2_base_only.xacro'" />
 
     <arg name="input_cmd_vel_topic"    default="/raw_cmd_vel" />
     <arg name="feedback_cmd_vel_topic" default="robot_cmd_vel" />
@@ -54,7 +54,7 @@
     </node>
 
     <!-- create transform for laser (should be moved to the URDF) -->
-    <node name="laser_to_base" pkg="tf2_ros" type="static_transform_publisher"  args="-0.090 0.0 0.037 0 0 0 1 base_link base_laser_link" />
+    <node name="laser_to_base" pkg="tf2_ros" type="static_transform_publisher"  args="-0.050 0.0 0.130 0 0 0 1 base_link base_laser_link" />
 
     <!-- publish the URDF -->
     <param name="robot_description" command="$(arg urdf_file)" />
